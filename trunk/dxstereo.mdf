@@ -1,7 +1,6 @@
 MODULE DXStereo
 CATEGORY Rendering
 DESCRIPTION GLUT based stereo visualization
-LOADABLE dxstereo
 INPUT obj; field;  (none); Data
 INPUT mode; string; "mono"; Stereo or mono rendering
 OPTIONS "mono"; "stereo"
