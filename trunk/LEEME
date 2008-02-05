@@ -1,0 +1,67 @@
+DXStereo: Modulo de OpenDX para la visualizacion en estereo
+Autor: Carlos David Suarez Pascal <david.suarez@yahoo.com>
+Asesor: Dr. Luis Miguel De la Cruz Salas <luiggi@labvis.unam.mx>
+Copyright (2006-2008) David Suarez Pascal
+Direccion General de Servicios de Computo Academico,
+Universidad Nacional Autonoma de Mexico (http://www.dgsca.unam.mx)
+
+
+    DESCRIPCION
+DXStereo es un modulo de OpenDX (http://www.opendx.org) para la visualizacion en
+estereo activo empleando la tecnica de quad-buffering mediante el uso de las
+bibliotecas OpenGL y GLUT.
+Una vez compilado y cargado en OpenDX, el modulo puede ser usado como componente
+terminal de una red de OpenDX para desplegar, en una nueva ventana creada con
+GLUT, una visualizacion de los objetos recibidos a partir de otra herramienta de
+OpenDX.
+La ventana desplegada permite cierta interaccion mediante el raton, y cierta
+configuracion mediante los parametros de "modo" (mono o estereo) e "IOD"
+(distancia inter-ocular) que recibe el modulo.
+
+
+    USO
+Una vez que DXStereo ha sido cargado en OpenDX, el modulo se puede encontrar en
+la paleta de herramientas, bajo la categoria de "Rendering", y con el nombre
+"DXStereo". Se puede manipular en el editor visual de OpenDX de la misma manera
+que cualquier otra herramienta.
+DXStereo acepta 3 argumentos: "obj", "mode" e "IOD":
+    obj:
+        es el objeto que se quiere desplegar en la ventana de GLUT. Actualmente
+        solo se aceptan objetos con posiciones en 3D, con componentes de
+        posiciones, conexiones, colores y normales. El componente de opacidad
+        esta soportado, pero es opcional.
+    mode:
+        este argumento acepta dos opciones: "mono" y "stereo". Determina el modo
+        de despliegue que se utilizara en DXStereo.
+        Si se elige mono, solamente se graficara una perspectiva del objeto; si
+        se elige stereo se utilizaran los cuatro buffers para desplegar la
+        perspectiva del ojo derecho y del ojo izquierdo (si este modo no esta
+        soportado por el hardware grafico se generara un error).
+    IOD:
+        este argumento solo tiene efecto si se elige el modo estereo, pues
+        determina la distancia entre las dos vistas (izquierda y derecha)
+        generadas por DXStereo. La distancia mas conveniente depende del modo de
+        proyeccion y la distancia a la que se ubique el observador.
+Como con otras herramientas de OpenDX, los tres argumentos pueden provenir de
+cualquier otra herramienta de OpenDX, siempre y cuando los tipos y los
+componentes requeridos en cada argumento sean los esperados. Si se desean
+conocer mas detalles de los argumentos se puede desplegar la vista detallada de
+la herramienta haciendo doble click sobre ella en el editor visual de programas
+de OpenDX.
+
+    NOTAS
+    1) Ciclo principal de GLUT y OpenDX
+Debido a la forma de operacion de GLUT, con su propio ciclo de ejecucion, la
+ejecucion de un programa de OpenDX que incluya el modulo DXStereo sera
+bloqueada por DXStereo. En general este no es un problema muy grave, pues
+DXStereo no produce resultados que pudieran ser utiles para el programa.
+No obstante, este problema quizas disminuya convirtiendo DXStereo en un modulo
+externo, aunque esto tenga consecuencias sobre el tiempo de inicio del modulo.
+Otra consecuencia que conlleva el empleo de GLUT es que la mayor parte de sus
+implementaciones requieren la terminacion del proceso para salir del ciclo. Lo
+que en el caso de OpenDX significa la terminacion del ejecutivo, que sera
+necesario reiniciar desde la opcion del menu "Connection->Start server ..."
+Se ha incluido en DXStereo la opcion de que el ciclo de GLUT se inicie en un
+proceso diferente al del ejecutivo usando una instruccion fork. Para activar
+esta opcion es necesario activar la bandera DXSTEREO_FORK en la compilacion del
+modulo.

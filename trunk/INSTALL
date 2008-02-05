@@ -1,0 +1,35 @@
+    INSTALLATION
+    -Pre-requisites
+        1)OpenDX:
+		DXStereo is an OpenDX module, so you need OpenDX installed before
+		you can use it. Your copy of OpenDX can be installed from source
+		or from binary packages. If the last is the case, you must install
+		also OpenDX development packages.
+		(Tested with OpenDX version 4.3 and 4.4)
+        2)GLUT:
+		DXStereo is implemented in C and requires the GLUT library,
+		which requires OpenGL and GLU.
+		(Tested with FreeGLUT 2.4)
+            
+        3)GCC:
+		You need an ANSI C compiler.
+		(Tested with GCC 3.x and 4.x)
+
+    -Compile
+	DXStereo includes a makefile with the next list of targets:
+		1) 'dxstereo' (outboard)
+		2) 'dxexec' (inboard)
+		3) 'run'
+		4) 'run_outboard'
+		5) 'clean'
+	To build dxstereo you just need to employ 'make' with one of the targets
+	'dxexec' if you want DXStereo to be build as an inboard module or 'dxstereo'
+	if you need it as outboard module.
+	Example:
+        	$make dxexec
+
+    -Run
+	You can employ the targets 'run' in case you have build DXStereo as inboard
+	or 'run_outboard' in other case.
+	Example:
+		$make run
