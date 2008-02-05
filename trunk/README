@@ -1,0 +1,46 @@
+DXStereo: OpenDX module for stereo visualization
+Author: Carlos David Suarez Pascal <david.suarez@yahoo.com>
+Mentor: Dr. Luis Miguel De la Cruz Salas <luiggi@labvis.unam.mx>
+Copyright (2006-2008) David Suarez Pascal
+Direccion General de Servicios de Computo Academico,
+Universidad Nacional Autonoma de Mexico (http://www.dgsca.unam.mx)
+
+
+    DESCRIPTION
+DXStereo is an OpenDX (http://www.opendx.org) module for active stereo
+visualization with quad-buffering. It employs OpenGL and GLUT libraries.
+Once compiled and loaded on OpenDX, DXStereo can be employed as another
+tool in OpenDX visual programs.
+The main window of DXStereo allows basic interaction with the mouse.
+Visualization parameters "mode" (mono or stereo) and "IOD" (inter-ocular
+distance) can be set.
+
+    USE
+Once loaded on OpenDX, DXStereo can be located on the tool palete, below "Rendering".
+DXStereo can be employed as any other tool on OpenDX.
+DXStereo has 3 input slots: "obj", "mode" and "IOD"
+    obj:
+        is the object to be rendered and displayed on the DXStereo window. The
+	objects is required to have 3D positions, with 'positions', 'conections',
+	'colors' and 'normals' components. 'opacity' is supported, but is optional.
+    mode:
+	sets the rendering and display mode of DXStereo. It can be: "mono" or
+	"stereo". "stereo" mode needs hardware support.
+    IOD:
+	this is the interocular distance, which is crucial in the calculus of the
+	left and right views on "stereo" mode.
+If you need more help, you can check the detailed view of the DXStereo box on the
+OpenDX VPE.
+
+
+    NOTES
+    1) GLUT main loop and OpenDX
+GLUT has its own main loop, which make difficult interaction of GLUT-based programs
+with 3rd party software. DXStereo has this drawback: once a OpenDX net including the
+DXStereo module is run the control never returns to OpenDX executive. This has been
+considered as a non-critical bug because DXStereo doesn't produce output.
+Once you left DXStereo, it will be needed to restart OpenDX executive from menu:
+"Connection->Start server ..."
+It has been included in DXStereo an optional forking code which can fork DXStereo as
+a new process. To activate this option you can use the flag DXSTEREO_FORK on DXStereo
+build.
