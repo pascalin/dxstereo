@@ -1,0 +1,6 @@
+MODULE HapticDevice
+CATEGORY Special
+DESCRIPTION Enables use of an haptic device
+LOADABLE HapticDevice;
+INPUT obj; field;  (none); field to enable haptic frames creation
+OUTPUT pointer; field;  field describing haptic device effector position

@@ -1,0 +1,31 @@
+MODULE_NAME = HapticDevice
+CATEGORY = Special
+MODULE_DESCRIPTION = Enables use of an haptic device
+PINNED = FALSE
+SIDE_EFFECT = FALSE
+ASYNCHRONOUS = FALSE
+LOADABLE_EXECUTABLE = HapticDevice
+
+INPUT = obj
+DESCRIPTION = field to enable haptic frames creation
+REQUIRED = TRUE
+TYPES = field
+STRUCTURE = Field/Group
+POSITIONS = Irregular
+CONNECTIONS = Irregular
+ELEMENT_TYPE = Not required
+DEPENDENCY = Positions or connections
+DATA_TYPE = float
+DATA_SHAPE = Scalar
+
+OUTPUT = pointer
+DESCRIPTION = field describing haptic device effector position
+TYPES = field
+STRUCTURE = Field/Group
+DATA_TYPE = float
+DATA_SHAPE = Scalar
+POSITIONS = Not required
+CONNECTIONS = Not required
+ELEMENT_TYPE = Not required
+DEPENDENCY = Positions only
+
