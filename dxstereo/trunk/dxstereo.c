@@ -32,10 +32,9 @@
 #include "dx/dx.h"
 /* define your post-dx.h include file for inclusion here*/
 ///<DXSTEREO> Encabezados
+#include <GL/glut.h>
 #ifdef FREEGLUT
 #include <GL/freeglut_ext.h>
-#else
-#include <GL/glut.h>
 #endif
 #include <math.h>
 #include <string.h>
@@ -218,6 +217,10 @@ Error m_DXStereo(Object *in, Object *out)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
   else
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_STEREO);
+
+#ifdef FREEGLUT
+  glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+#endif
 
   glutCreateWindow("DXStereo"); //Crea la ventana
   glClearColor(0.0,0.0,0.0,1.0); //Limpia la ventana
@@ -1070,6 +1073,9 @@ GLvoid keyboard(GLubyte key, GLint x, GLint y)
     case 'q':
     case 'Q':
 #ifdef FREEGLUT
+#ifdef DXSTEREO_DEBUG
+      DXMessage("Using FreeGLUT extensions!");
+#endif
       glutLeaveMainLoop();
 #else
       exit(0);
