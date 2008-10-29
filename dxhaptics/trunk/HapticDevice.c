@@ -1,16 +1,103 @@
-/*
- * Automatically generated on "/tmp/HapticDevice.mb" by DX Module Builder
- */
-
 /* define your pre-dx.h include file for inclusion here*/ 
 #ifdef PRE_DX_H
 #include "HapticDevice_predx.h"
 #endif
 #include "dx/dx.h"
+
+#if defined(WIN32)
+# include <windows.h>
+#else
+# include <string.h>
+#endif
+
+#include <stdio.h>
+#include <assert.h>
+#include <sys/time.h>
+#include <signal.h>
+
+#include <HD/hd.h>
+
+#include <HDU/hduVector.h>
+#include <HDU/hduError.h>
+
 /* define your post-dx.h include file for inclusion here*/ 
 #ifdef POST_DX_H
 #include "HapticDevice_postdx.h"
 #endif
+
+extern Pointer DXGetModuleId();
+extern Error DXReadyToRun(Pointer id);
+extern Error DXFreeModuleId(Pointer id);
+
+
+static Pointer id = NULL;
+
+
+void sigcatch()
+{
+    DXReadyToRun(id);
+}	
+
+unsigned malarm(unsigned msecs, unsigned reload)
+{
+  itimerval new, old;
+  new.it_interval.tv_usec = 1000 * (reload % 1000);
+  new.it_interval.tv_sec = reload / 1000;
+  new.it_value.tv_usec = 1000 * (msecs % 1000);
+  new.it_value.tv_sec = msecs / 1000;
+
+  if (setitimer(ITIMER_REAL, &new, &old) == 0)
+    return (old.it_value.tv_sec * 1000 + old.it_value.tv_usec/1000);
+  /* else */
+  return (-1);
+}
+
+typedef struct 
+{
+    HDboolean button_pressed;
+    hduVector3Dd position;
+    HDErrorInfo error;
+} DeviceData;
+
+static DeviceData HapticDeviceData;
+
+/* Instantiate the structure used to capture data from the device. */
+DeviceData current_data;
+DeviceData prev_data;
+
+int buttonHoldCount = 0;
+
+
+HDCallbackCode HDCALLBACK updateDeviceCallback(void *pUserData)
+{   
+  int num_buttons = 0;
+  
+  hdBeginFrame(hdGetCurrentDevice());
+  
+  hdGetIntegerv(HD_CURRENT_BUTTONS, &num_buttons);
+  
+  HapticDeviceData.button_pressed = 
+    (num_buttons & HD_DEVICE_BUTTON_1) ? HD_TRUE : HD_FALSE;
+    
+  hdGetDoublev(HD_CURRENT_POSITION, HapticDeviceData.position);
+    
+  HapticDeviceData.error = hdGetError();
+    
+  hdEndFrame(hdGetCurrentDevice());
+  
+  return HD_CALLBACK_CONTINUE;    
+}
+
+
+HDCallbackCode HDCALLBACK copyDeviceDataCallback(void *pUserData)
+{
+  DeviceData *pDevData = (DeviceData *) pUserData;
+  
+  memcpy(pDevData, &HapticDeviceData, sizeof(DeviceData));
+  
+  return HD_CALLBACK_DONE;
+}
+
 
 static Error traverse(Object *, Object *);
 static Error doLeaf(Object *, Object *);
@@ -32,6 +119,11 @@ Error
 m_HapticDevice(Object *in, Object *out)
 {
   int i;
+
+  HDSchedulerHandle hUpdateHandle = 0;
+  HDErrorInfo error;
+
+  Array data=NULL, positions=NULL;
 
   /*
    * Initialize all outputs to NULL
@@ -67,11 +159,110 @@ m_HapticDevice(Object *in, Object *out)
   if (out[0] == in[0])
     out[0] = NULL;
 
+  /* arrange a handler to catch the signal */
+  signal(SIGALRM, sigcatch);
+  
+  /* the first time, get the module id for the DXReadyToRun call */
+
+  if (!id) {
+    /* Initialize the device, must be done before attempting to call any hd 
+       functions. */
+    HHD hHD = hdInitDevice(HD_DEFAULT_DEVICE);
+    if (HD_DEVICE_ERROR(error = hdGetError()))
+      {
+	//hduPrintError(stderr, &error, "Failed to initialize the device");
+	DXMessage("Failed to initialize the device");
+	return ERROR;           
+      }
+    
+    /* Schedule the main scheduler callback that updates the device state. */
+    hUpdateHandle = hdScheduleAsynchronous(
+					   updateDeviceCallback, 0, HD_MAX_SCHEDULER_PRIORITY);
+  
+    /* Start the servo loop scheduler. */
+    hdStartScheduler();
+    if (HD_DEVICE_ERROR(error = hdGetError()))
+      {
+	//hduPrintError(stderr, &error, "Failed to start the scheduler");
+	DXMessage("Failed to start the scheduler");
+	return ERROR;           
+      }
+
+    /* Perform a synchronous call to copy the most current device state. */
+    hdScheduleSynchronous(copyDeviceDataCallback,
+			  &current_data, HD_MIN_SCHEDULER_PRIORITY);
+    
+    memcpy(&prev_data, &current_data, sizeof(DeviceData));
+  }
+  
+  if (!id) {
+    id = DXGetModuleId();
+    if (!id) {
+      out[0] = NULL;
+      return ERROR;
+    }
+  }
+
   /*
    * Call the hierarchical object traversal routine
    */
   if (!traverse(in, out))
     goto error;
+
+
+  /* Perform a synchronous call to copy the most current device state.
+     This synchronous scheduler call ensures that the device state
+     is obtained in a thread-safe manner. */
+  hdScheduleSynchronous(copyDeviceDataCallback,
+			&current_data,
+			HD_MIN_SCHEDULER_PRIORITY);
+  
+  /* make a new data array (scalar) */
+  data = DXNewArray(TYPE_FLOAT, CATEGORY_REAL, 0);
+  if (!data)
+    goto error;
+
+  if (!DXAddArrayData(data, 0, 1, current_data.button_pressed?0:1))
+     goto error;
+
+  /* set the dependency of the data to be on positions */
+  if (!DXSetStringAttribute((Object)data, "dep", "positions"))
+    goto error;
+
+  /* 
+   * Make the new positions array for the output. The positions are
+   * three-dimensional. 
+   */
+  positions = DXNewArray(TYPE_FLOAT, CATEGORY_REAL, 1, 3);
+  if (! positions)
+    goto error;
+
+  if (! DXAddArrayData(positions, 0, 1, DXPt(current_data.position[0], current_data.position[1], current_data.position[2])))
+    goto error;
+  
+  out[0] = DXNewField();
+  DXSetComponentValue((Field)out[0], "positions", (Object)positions);
+  positions = NULL;
+  DXSetComponentValue((Field)out[0], "data", (Object)data);
+  data = NULL;
+
+  /* Finalize the field */
+  DXEndField((Field)out[0]);
+  
+
+  if (HD_DEVICE_ERROR(current_data.error))
+    {
+      hduPrintError(stderr, &current_data.error, "Device error detected");
+      
+      if (hduIsSchedulerError(&current_data.error))
+	{
+	  break;
+	}
+    }
+
+  memcpy(&prev_data, &current_data, sizeof(DeviceData));    
+
+  malarm(10, 0);
 
   return OK;
 
