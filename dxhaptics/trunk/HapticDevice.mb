@@ -3,8 +3,9 @@ CATEGORY = Special
 MODULE_DESCRIPTION = Enables use of an haptic device
 PINNED = FALSE
 SIDE_EFFECT = FALSE
-ASYNCHRONOUS = FALSE
-LOADABLE_EXECUTABLE = HapticDevice
+ASYNCHRONOUS = TRUE
+OUTBOARD_EXECUTABLE = HapticDevice
+OUTBOARD_PERSISTENT = TRUE
 
 INPUT = obj
 DESCRIPTION = field to enable haptic frames creation

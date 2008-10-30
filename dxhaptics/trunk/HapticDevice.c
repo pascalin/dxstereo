@@ -34,6 +34,24 @@ extern Error DXFreeModuleId(Pointer id);
 static Pointer id = NULL;
 
 
+typedef struct 
+{
+    HDboolean button_pressed;
+    hduVector3Dd position;
+    HDErrorInfo error;
+} DeviceData;
+
+static DeviceData HapticDeviceData;
+
+/* Instantiate the structure used to capture data from the device. */
+DeviceData current_data;
+DeviceData prev_data;
+
+HHD hHD;
+HDSchedulerHandle hUpdateHandle = 0;
+HDErrorInfo error;
+
+
 void sigcatch()
 {
     DXReadyToRun(id);
@@ -48,7 +66,7 @@ void cleanup()
 
 unsigned malarm(unsigned msecs, unsigned reload)
 {
-  itimerval new, old;
+  struct itimerval new, old;
   new.it_interval.tv_usec = 1000 * (reload % 1000);
   new.it_interval.tv_sec = reload / 1000;
   new.it_value.tv_usec = 1000 * (msecs % 1000);
@@ -59,23 +77,6 @@ unsigned malarm(unsigned msecs, unsigned reload)
   /* else */
   return (-1);
 }
-
-typedef struct 
-{
-    HDboolean button_pressed;
-    hduVector3Dd position;
-    HDErrorInfo error;
-} DeviceData;
-
-static DeviceData HapticDeviceData;
-
-/* Instantiate the structure used to capture data from the device. */
-DeviceData current_data;
-DeviceData prev_data;
-
-HDSchedulerHandle hUpdateHandle = 0;
-HDErrorInfo error;
-
 
 HDCallbackCode HDCALLBACK updateDeviceCallback(void *pUserData)
 {   
@@ -173,7 +174,7 @@ m_HapticDevice(Object *in, Object *out)
   if (!id) {
     /* Initialize the device, must be done before attempting to call any hd 
        functions. */
-    HHD hHD = hdInitDevice(HD_DEFAULT_DEVICE);
+    hHD = hdInitDevice(HD_DEFAULT_DEVICE);
     if (HD_DEVICE_ERROR(error = hdGetError()))
       {
 	//hduPrintError(stderr, &error, "Failed to initialize the device");
