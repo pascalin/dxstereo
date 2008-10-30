@@ -11,6 +11,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <sys/time.h>
 #include <signal.h>
@@ -37,6 +38,13 @@ void sigcatch()
 {
     DXReadyToRun(id);
 }	
+
+void cleanup()
+{
+  hdStopScheduler();
+  hdUnschedule(hUpdateHandle);
+  hdDisableDevice(hHD);
+}
 
 unsigned malarm(unsigned msecs, unsigned reload)
 {
@@ -65,7 +73,8 @@ static DeviceData HapticDeviceData;
 DeviceData current_data;
 DeviceData prev_data;
 
-int buttonHoldCount = 0;
+HDSchedulerHandle hUpdateHandle = 0;
+HDErrorInfo error;
 
 
 HDCallbackCode HDCALLBACK updateDeviceCallback(void *pUserData)
@@ -120,9 +129,6 @@ m_HapticDevice(Object *in, Object *out)
 {
   int i;
 
-  HDSchedulerHandle hUpdateHandle = 0;
-  HDErrorInfo error;
-
   Array data=NULL, positions=NULL;
 
   /*
@@ -176,8 +182,7 @@ m_HapticDevice(Object *in, Object *out)
       }
     
     /* Schedule the main scheduler callback that updates the device state. */
-    hUpdateHandle = hdScheduleAsynchronous(
-					   updateDeviceCallback, 0, HD_MAX_SCHEDULER_PRIORITY);
+    hUpdateHandle = hdScheduleAsynchronous(updateDeviceCallback, 0, HD_MAX_SCHEDULER_PRIORITY);
   
     /* Start the servo loop scheduler. */
     hdStartScheduler();
@@ -187,6 +192,8 @@ m_HapticDevice(Object *in, Object *out)
 	DXMessage("Failed to start the scheduler");
 	return ERROR;           
       }
+
+    atexit(cleanup);
 
     /* Perform a synchronous call to copy the most current device state. */
     hdScheduleSynchronous(copyDeviceDataCallback,
