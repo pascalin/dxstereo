@@ -279,7 +279,7 @@ m_HapticDevice(Object *in, Object *out)
       
       if (hduIsSchedulerError(&current_data.error))
 	{
-	  break;
+	  goto error;
 	}
     }
 
