@@ -17,7 +17,7 @@ LDFLAGS = -L$(BASE)/lib_$(DXARCH)
 
 LIBS = -lHDU -lHD -lrt -lDX $(DX_GL_LINK_LIBS) $(DXEXECLINKLIBS)
 
-OLIBS = -lDXlite -lm
+OLIBS = -lDXlite -lm -lHDU -lHD -lrt
 
 BIN = $(BASE)/bin
 
