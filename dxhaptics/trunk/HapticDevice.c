@@ -131,6 +131,7 @@ m_HapticDevice(Object *in, Object *out)
   int i;
 
   Array data=NULL, positions=NULL;
+  float *data_a=NULL, *positions_a=NULL;
 
   /*
    * Initialize all outputs to NULL
@@ -230,8 +231,14 @@ m_HapticDevice(Object *in, Object *out)
   if (!data)
     goto error;
 
-  if (!DXAddArrayData(data, 0, 1, current_data.button_pressed?0:1))
+  if (!DXAddArrayData(data, 0, 1, NULL))
      goto error;
+
+  data_a = (float *) DXGetArrayData(data);
+  if (!data_a)
+    goto error;
+
+  data_a[0] = current_data.button_pressed?0.0f:1.0f;
 
   /* set the dependency of the data to be on positions */
   if (!DXSetStringAttribute((Object)data, "dep", "positions"))
@@ -245,8 +252,16 @@ m_HapticDevice(Object *in, Object *out)
   if (! positions)
     goto error;
 
-  if (! DXAddArrayData(positions, 0, 1, DXPt(current_data.position[0], current_data.position[1], current_data.position[2])))
+  if (! DXAddArrayData(positions, 0, 3, NULL))
     goto error;
+
+  positions_a = (float *) DXGetArrayData(positions);
+  if (! positions_a)
+    goto error;
+
+  positions_a[0] = current_data.position[0];
+  positions_a[1] = current_data.position[1];
+  positions_a[2] = current_data.position[2];
   
   out[0] = DXNewField();
   DXSetComponentValue((Field)out[0], "positions", (Object)positions);
